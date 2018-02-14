@@ -1,17 +1,19 @@
 'use strict';
 
-const net = require('net');
+const {default: SocketPool} = require('socket-pool');
 
 class SomfySynergy {
-  constructor(systemID, address, port = 44100) {
+  constructor(systemID, host, port = 44100) {
+    this._nextID = 1;
+    this._socketPool = new SocketPool({
+      connect: {host, port},
+    });
     this._systemID = systemID;
-    this._address = address;
-    this._port = port;
   }
 
   send(targetID, method) {
     validateTargetID(targetID);
-    const id = 1; // We only use each connection for a single request.
+    const id = this._nextID++;
     const request = {
       id,
       method,
@@ -20,8 +22,27 @@ class SomfySynergy {
         targetID,
       },
     };
-    return send(this._address, this._port, request).then(
-      response => response.result,
+    return this._socketPool.acquire().then(
+      socket =>
+        new Promise((resolve, reject) => {
+          socket.write(JSON.stringify(request), error => {
+            if (error != null) {
+              reject(error);
+            }
+          });
+          socket.on('data', data => {
+            try {
+              const response = JSON.parse(data.toString());
+              if (response.id === id) {
+                resolve(response.result);
+                socket.release();
+              }
+            } catch (error) {
+              reject(error);
+              socket.release();
+            }
+          });
+        }),
     );
   }
 
@@ -34,36 +55,6 @@ class SomfySynergy {
     };
   }
 }
-
-const connect = (address, port) => {
-  return new Promise((resolve, reject) => {
-    const client = net.createConnection(port, address, error => {
-      if (error == null) {
-        resolve(client);
-      } else {
-        reject(error);
-      }
-    });
-    client.setEncoding('utf8');
-  });
-};
-
-const send = (address, port, request) => {
-  return connect(address, port).then(
-    client =>
-      new Promise((resolve, reject) => {
-        client.write(JSON.stringify(request), error => {
-          if (error != null) {
-            reject(error);
-          }
-        });
-        client.on('data', data => {
-          resolve(JSON.parse(data));
-          client.end();
-        });
-      }),
-  );
-};
 
 const validateTargetID = targetID => {
   if (!/[A-Z0-9]+\.[0-9]+/.test(targetID)) {
