@@ -1,5 +1,7 @@
 'use strict';
 
+const SomfySynergyPlatform = require('./SomfySynergyPlatform');
+
 const {default: SocketPool} = require('socket-pool');
 
 class SomfySynergy {
@@ -55,6 +57,8 @@ class SomfySynergy {
     };
   }
 }
+
+SomfySynergy.Platform = SomfySynergyPlatform;
 
 const validateTargetID = targetID => {
   if (!/[A-Z0-9]+\.[0-9]+/.test(targetID)) {

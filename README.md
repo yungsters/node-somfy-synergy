@@ -50,7 +50,7 @@ synergy
 
 ## Composite Targeting
 
-The `SomfySynergyPlatform` class exposes an interface similar to `SomfySynergy`. Unlike `SomfySynergy`, this class will efficiently batch requests into "composite targets".
+The `SomfySynergy.Platform` class exposes an interface similar to `SomfySynergy`. Unlike `SomfySynergy`, this class will efficiently batch requests into "composite targets".
 
 For example, suppose you have three Somfy myLink targets:
 
@@ -58,10 +58,10 @@ For example, suppose you have three Somfy myLink targets:
 * Target B: Right Window Shade
 * Target C: Both Window Shades
 
-In other words, Target C is a channel programmed to control both Target A and Target B. You could then instantiate `SomfySynergyPlatform` with:
+In other words, Target C is a channel programmed to control both Target A and Target B. You could then instantiate `SomfySynergy.Platform` with:
 
 ```js
-const platform = new SomfySynergyPlatform(
+const platform = new SomfySynergy.Platform(
   new SomfySynergy(...),
   {
     '<Target A>': [],
