@@ -45,8 +45,10 @@ class SomfySynergyPlatform {
   }
 
   send(targetID, method) {
-    this._pendingRequests.set(targetID, method);
-    this._scheduleRequests();
+    return new Promise((resolve, reject) => {
+      this._pendingRequests.set(targetID, {method, resolve, reject});
+      this._scheduleRequests();
+    });
   }
 
   target(targetID) {
@@ -58,39 +60,45 @@ class SomfySynergyPlatform {
   }
 
   _processRequests() {
-    const targetIDsByMethod = new Map();
+    // Map<Method, Map<TargetID, {resolve, reject}>>
+    const requestsByMethod = new Map();
 
-    for (const [targetID, method] of this._pendingRequests) {
-      if (!targetIDsByMethod.has(method)) {
-        targetIDsByMethod.set(method, new Set());
+    for (const [targetID, {method, resolve, reject}] of this._pendingRequests) {
+      if (!requestsByMethod.has(method)) {
+        requestsByMethod.set(method, new Map());
       }
-      targetIDsByMethod.get(method).add(targetID);
+      requestsByMethod.get(method).set(targetID, {resolve, reject});
     }
 
-    for (const [method, targetIDs] of targetIDsByMethod) {
-      for (const targetID of this._reduceTargetIDs(targetIDs)) {
-        this._synergy.send(targetID, method);
+    for (const [method, requests] of requestsByMethod) {
+      const reducedRequests = this._reduceRequests(requests);
+      for (const [targetID, {resolve, reject}] of reducedRequests) {
+        this._synergy.send(targetID, method).then(resolve, reject);
       }
     }
   }
 
-  _reduceTargetIDs(targetIDs) {
-    const reducedIDs = new Set(targetIDs);
+  _reduceRequests(originalRequests) {
+    const requests = new Map(originalRequests);
 
     for (const [targetID, composedIDs] of Object.entries(this._targets)) {
-      if (reducedIDs.has(targetID) || composedIDs.length === 0) {
+      if (requests.has(targetID) || composedIDs.length === 0) {
         continue;
       }
-      if (composedIDs.some(composedID => !reducedIDs.has(composedID))) {
+      if (composedIDs.some(composedID => !requests.has(composedID))) {
         continue;
       }
+      const composite = new Promise((resolve, reject) => {
+        requests.set(targetID, {resolve, reject});
+      });
       for (const composedID of composedIDs) {
-        reducedIDs.delete(composedID);
+        const {resolve, reject} = requests.get(composedID);
+        composite.then(resolve, reject);
+        requests.delete(composedID);
       }
-      reducedIDs.add(targetID);
     }
 
-    return reducedIDs;
+    return requests;
   }
 }
 
