@@ -1,6 +1,6 @@
 {
   "name": "somfy-synergy",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Interface for the Somfy Synergy API (myLink).",
   "license": "MIT",
   "homepage": "https://github.com/yungsters/node-somfy-synergy",
