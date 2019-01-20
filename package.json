@@ -45,6 +45,7 @@
     "pretty-quick": "^1.3.0"
   },
   "dependencies": {
-    "socket-pool": "^1.2.1"
+    "socket-pool": "^1.2.1",
+    "net-keepalive": "^1.2.1"
   }
 }
