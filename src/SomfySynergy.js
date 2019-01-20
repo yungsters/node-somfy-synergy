@@ -4,7 +4,7 @@ const SomfySynergyPlatform = require('./SomfySynergyPlatform');
 
 const {default: SocketPool} = require('socket-pool');
 
-const NetKeepAlive = require('net-keepalive');
+require('net-keepalive');
 
 class SomfySynergy {
   constructor(systemID, host, port = 44100) {
