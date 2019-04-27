@@ -4,7 +4,7 @@ const SomfySynergyPlatform = require('./SomfySynergyPlatform');
 
 const {default: SocketPool} = require('socket-pool');
 
-require('net-keepalive');
+const NetKeepAlive = require('net-keepalive');
 
 class SomfySynergy {
   constructor(systemID, host, port = 44100) {
@@ -30,6 +30,8 @@ class SomfySynergy {
       socket =>
         new Promise((resolve, reject) => {
           socket._socket.setKeepAlive(true, 5000);
+          NetKeepAlive.setKeepAliveInterval(socket._socket, 1000);
+          NetKeepAlive.setKeepAliveProbes(socket._socket, 10)
           socket.write(JSON.stringify(request), error => {
             if (error != null) {
               reject(error);
