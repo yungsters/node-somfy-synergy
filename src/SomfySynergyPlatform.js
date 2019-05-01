@@ -69,6 +69,7 @@ class SomfySynergyPlatform {
       }
       requestsByMethod.get(method).set(targetID, {resolve, reject});
     }
+    this._pendingRequests.clear();
 
     for (const [method, requests] of requestsByMethod) {
       const reducedRequests = this._reduceRequests(requests);
